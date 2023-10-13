@@ -2,15 +2,24 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+mod components;
+use components::chat_area::ChatArea;
+
+use crate::model::conversation::{Conversation, Message};
+
 #[component]
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
+    // allow any component to get dark mode state via context
+    let (dark_mode, set_dark_mode) = create_signal(true);
+    provide_context(dark_mode);
+ 
     view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/leptos_start.css"/>
+        <Stylesheet id="leptos" href="/pkg/halaodi.css"/>
 
         // sets the document title
         <Title text="Welcome to Leptos"/>
@@ -29,14 +38,11 @@ pub fn App() -> impl IntoView {
 
 /// Renders the home page of your application.
 #[component]
-fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
-    let (count, set_count) = create_signal(0);
-    let on_click = move |_| set_count.update(|count| *count += 1);
+fn HomePage() -> impl IntoView {    
+    let (conversation, set_conversation) = create_signal(Conversation::new());
 
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <ChatArea conversation />
     }
 }
 
