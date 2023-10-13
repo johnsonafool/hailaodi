@@ -1,0 +1,21 @@
+{
+  "name": "halaodi",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "bun build",
+    "dev": "bun dev",
+    "start": "bun start",
+    "lint": "bun lint",
+    "test": "bun test",
+    "tailwind:watch": "bunx tailwindcss -i ./input.css -o ./style/output.css --watch"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "tailwindcss": "^3.3.3",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
