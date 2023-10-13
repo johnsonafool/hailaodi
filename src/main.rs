@@ -1,3 +1,7 @@
+use cfg_if::cfg_if;
+
+use api::ws;
+pub mod api;
 pub mod model;
 
 #[cfg(feature = "ssr")]
@@ -15,6 +19,13 @@ async fn main() -> std::io::Result<()> {
     let routes = generate_route_list(App);
     println!("listening on http://{}", &addr);
 
+    #[get("/style.css")]
+    async fn css() -> impl Responder {
+        actix_files::NamedFile::open_async("./style/output.css").await
+    }
+
+    let model = web::Data::new(get_language_model());
+
     HttpServer::new(move || {
         let leptos_options = &conf.leptos_options;
         let site_root = &leptos_options.site_root;
@@ -29,11 +40,49 @@ async fn main() -> std::io::Result<()> {
             .service(favicon)
             .leptos_routes(leptos_options.to_owned(), routes.to_owned(), App)
             .app_data(web::Data::new(leptos_options.to_owned()))
+
+            .app_data(model.clone())
+            .service(css)
+            .route("/ws", web::get().to(ws))
+            
         //.wrap(middleware::Compress::default())
     })
     .bind(&addr)?
     .run()
     .await
+}
+
+cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use llm::models::Llama;
+        use actix_web::*;
+        use std::env;
+        use dotenv::dotenv;
+        fn get_language_model() -> Llama {
+            use std::path::PathBuf;
+            dotenv().ok();
+            let model_path = env::var("MODEL_PATH").expect("MODEL_PATH must be set");
+            let model_parameters = llm::ModelParameters {
+                prefer_mmap: true,
+                context_size: 2048,
+                lora_adapters: None,
+                use_gpu: true,
+                gpu_layers: None,
+                rope_overrides: None,
+                n_gqa: None,
+            };
+
+            llm::load::<Llama>(
+                &PathBuf::from(&model_path),
+                llm::TokenizerSource::Embedded,
+                model_parameters,
+                llm::load_progress_callback_stdout,
+            )
+            .unwrap_or_else(|err| {
+                panic!("Failed to load model from {model_path:?}: {err}")
+            })
+        }
+    }
 }
 
 #[cfg(feature = "ssr")]

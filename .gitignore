@@ -14,3 +14,9 @@ playwright/.cache/
 
 # tailwind generated css style
 style/
+
+# llama
+Wizard-Vicuna-7B-Uncensored.ggmlv3.q2_K.bin
+
+# environment variable
+.env
